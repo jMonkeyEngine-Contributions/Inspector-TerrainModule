@@ -50,7 +50,7 @@ import nu.zoom.jme.inspector.heightfield.HeightFieldVisualizerTopComponent;
  *
  * @author Johan Maasing <johan@zoom.nu>
  */
-public final class AppFinder extends DefaultComboBoxModel<ObjectName> {
+public final class AppFinder extends DefaultComboBoxModel {
 
     private final Logger log = Logger.getLogger(getClass().getName());
     private final MBeanServer server;
