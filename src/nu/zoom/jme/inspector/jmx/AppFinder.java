@@ -56,6 +56,7 @@ public final class AppFinder extends DefaultComboBoxModel {
     private final MBeanServer server;
     private final Timer refreshTimer;
     private final AtomicBoolean backgroundOperationInProgress = new AtomicBoolean(false);
+    private final AtomicBoolean attached = new AtomicBoolean(false);
     private final HeightFieldVisualizerTopComponent owner;
 
     public AppFinder(
@@ -72,7 +73,7 @@ public final class AppFinder extends DefaultComboBoxModel {
     }
 
     private void refresh() {
-        if (!this.backgroundOperationInProgress.get()) {
+        if (!this.backgroundOperationInProgress.get() && this.attached.get()) {
             try {
                 ObjectName searchname = new ObjectName(JMXNames.TERRAIN_INSPECTOR_OBJECTNAME);
                 final Set<ObjectName> registeredNames = this.server.queryNames(searchname, null);
@@ -99,7 +100,20 @@ public final class AppFinder extends DefaultComboBoxModel {
     }
 
     /**
-     * Should be called on the event/swing thread
+     * Detach from the remote mbean server.
+     */
+    public void detach() {
+        this.attached.set(false);
+        stopTimer();
+        owner.setTerrainGridInspector(null);
+    }
+
+    public boolean isAttached() {
+        return attached.get();
+    }
+
+    /**
+     * Can be called on any thread
      *
      * @param serverURLString
      * @param remoteOperationProgressbar
@@ -147,6 +161,7 @@ public final class AppFinder extends DefaultComboBoxModel {
             log.severe("Concurrency problem: Unable to reset background operation flag");
         }
         owner.indicateBackgroundOperation(!couldReset);
+        this.attached.set(true);
         owner.setTerrainGridInspector(terrainGridInspector);
     }
 
@@ -157,5 +172,6 @@ public final class AppFinder extends DefaultComboBoxModel {
         }
         owner.indicateBackgroundOperation(false);
         owner.indicateConnectionError(ex);
+        owner.setTerrainGridInspector(null);
     }
 }

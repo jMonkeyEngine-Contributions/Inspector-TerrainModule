@@ -26,6 +26,7 @@
  */
 package nu.zoom.jme.inspector.heightfield;
 
+import com.jme3.math.Vector3f;
 import java.awt.EventQueue;
 import java.lang.management.ManagementFactory;
 import java.util.concurrent.atomic.AtomicReference;
@@ -33,8 +34,10 @@ import javax.management.MBeanServer;
 import nu.zoom.jme.inspector.common.JMETerrainGridInspectorMBean;
 import nu.zoom.jme.inspector.common.JMXNames;
 import nu.zoom.jme.inspector.common.TerrainQuadInformation;
+import static nu.zoom.jme.inspector.heightfield.Bundle.*;
 import nu.zoom.jme.inspector.jmx.AppFinder;
 import nu.zoom.jme.inspector.jmx.TerrainQuadRefresher;
+import nu.zoom.jme.inspector.jmx.TerrainQuadRefresherListener;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.DialogDisplayer;
 import org.openide.NotifyDescriptor;
@@ -42,10 +45,8 @@ import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.StatusDisplayer;
 import org.openide.util.NbBundle;
-import org.openide.windows.TopComponent;
-import static nu.zoom.jme.inspector.heightfield.Bundle.*;
-import nu.zoom.jme.inspector.jmx.TerrainQuadRefresherListener;
 import org.openide.util.NbBundle.Messages;
+import org.openide.windows.TopComponent;
 
 /**
  * Top component which displays something.
@@ -90,7 +91,6 @@ public final class HeightFieldVisualizerTopComponent extends TopComponent implem
         portTextField = new javax.swing.JTextField();
         attachButton = new javax.swing.JToggleButton();
         attachSelectorSeparator = new javax.swing.JToolBar.Separator();
-        appInstanceSelectorComboBox = new javax.swing.JComboBox();
         remoteOperationProgressbar = new javax.swing.JProgressBar();
         mainSplitter = new javax.swing.JSplitPane();
         imageComponentScroller = new javax.swing.JScrollPane();
@@ -103,6 +103,10 @@ public final class HeightFieldVisualizerTopComponent extends TopComponent implem
         minRangeValue = new javax.swing.JLabel();
         maxRangeLabel = new javax.swing.JLabel();
         maxRangeValue = new javax.swing.JLabel();
+        cellLabel = new javax.swing.JLabel();
+        cellValue = new javax.swing.JLabel();
+        nameLabel = new javax.swing.JLabel();
+        nameValue = new javax.swing.JLabel();
 
         mainToolBar.setRollover(true);
 
@@ -125,16 +129,13 @@ public final class HeightFieldVisualizerTopComponent extends TopComponent implem
         mainToolBar.add(attachButton);
         mainToolBar.add(attachSelectorSeparator);
 
-        appInstanceSelectorComboBox.setModel(this.appFinder);
-        appInstanceSelectorComboBox.setEnabled(false);
-        mainToolBar.add(appInstanceSelectorComboBox);
         mainToolBar.add(remoteOperationProgressbar);
 
         javax.swing.GroupLayout heightFieldImageBeanLayout = new javax.swing.GroupLayout(heightFieldImageBean);
         heightFieldImageBean.setLayout(heightFieldImageBeanLayout);
         heightFieldImageBeanLayout.setHorizontalGroup(
             heightFieldImageBeanLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 256, Short.MAX_VALUE)
+            .addGap(0, 257, Short.MAX_VALUE)
         );
         heightFieldImageBeanLayout.setVerticalGroup(
             heightFieldImageBeanLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -156,6 +157,13 @@ public final class HeightFieldVisualizerTopComponent extends TopComponent implem
         org.openide.awt.Mnemonics.setLocalizedText(maxRangeLabel, org.openide.util.NbBundle.getMessage(HeightFieldVisualizerTopComponent.class, "HeightFieldVisualizerTopComponent.maxRangeLabel.text")); // NOI18N
 
         org.openide.awt.Mnemonics.setLocalizedText(maxRangeValue, org.openide.util.NbBundle.getMessage(HeightFieldVisualizerTopComponent.class, "HeightFieldVisualizerTopComponent.maxRangeValue.text")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(cellLabel, org.openide.util.NbBundle.getMessage(HeightFieldVisualizerTopComponent.class, "HeightFieldVisualizerTopComponent.cellLabel.text")); // NOI18N
+
+        org.openide.awt.Mnemonics.setLocalizedText(cellValue, org.openide.util.NbBundle.getMessage(HeightFieldVisualizerTopComponent.class, "HeightFieldVisualizerTopComponent.cellValue.text")); // NOI18N
+
+        org.openide.awt.Mnemonics.setLocalizedText(nameLabel, org.openide.util.NbBundle.getMessage(HeightFieldVisualizerTopComponent.class, "HeightFieldVisualizerTopComponent.nameLabel.text")); // NOI18N
+
+        org.openide.awt.Mnemonics.setLocalizedText(nameValue, org.openide.util.NbBundle.getMessage(HeightFieldVisualizerTopComponent.class, "HeightFieldVisualizerTopComponent.nameValue.text")); // NOI18N
 
         javax.swing.GroupLayout imageInfoPanelLayout = new javax.swing.GroupLayout(imageInfoPanel);
         imageInfoPanel.setLayout(imageInfoPanelLayout);
@@ -163,15 +171,20 @@ public final class HeightFieldVisualizerTopComponent extends TopComponent implem
             imageInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(imageInfoPanelLayout.createSequentialGroup()
                 .addContainerGap()
+                .addGroup(imageInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(nameLabel)
+                    .addComponent(cellLabel)
                 .addGroup(imageInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(maxRangeLabel)
                     .addComponent(sizeLabel, javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(minRangeLabel, javax.swing.GroupLayout.Alignment.TRAILING))
+                        .addComponent(minRangeLabel, javax.swing.GroupLayout.Alignment.TRAILING)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(imageInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(sizeValue, javax.swing.GroupLayout.DEFAULT_SIZE, 238, Short.MAX_VALUE)
                     .addComponent(minRangeValue, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(maxRangeValue, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(maxRangeValue, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(cellValue, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(nameValue, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         imageInfoPanelLayout.setVerticalGroup(
@@ -179,17 +192,25 @@ public final class HeightFieldVisualizerTopComponent extends TopComponent implem
             .addGroup(imageInfoPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(imageInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(sizeLabel)
-                    .addComponent(sizeValue))
-                .addGap(18, 18, 18)
+                    .addComponent(cellLabel)
+                    .addComponent(cellValue))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(imageInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(minRangeLabel)
                     .addComponent(minRangeValue))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(imageInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(maxRangeLabel)
                     .addComponent(maxRangeValue))
-                .addContainerGap(226, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(imageInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(sizeLabel)
+                    .addComponent(sizeValue))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(imageInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(nameLabel)
+                    .addComponent(nameValue))
+                .addContainerGap(198, Short.MAX_VALUE))
         );
 
         imageInfoScroller.setViewportView(imageInfoPanel);
@@ -213,12 +234,18 @@ public final class HeightFieldVisualizerTopComponent extends TopComponent implem
     }// </editor-fold>//GEN-END:initComponents
 
     private void attachButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_attachButtonActionPerformed
-        this.appFinder.attach(portTextField.getText());
+        if (this.appFinder.isAttached()) {
+            this.appFinder.detach();
+            // Appfinder will callback to us to stop the terrain refresher.
+        } else {
+            this.appFinder.attach(portTextField.getText());
+        }
     }//GEN-LAST:event_attachButtonActionPerformed
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JComboBox appInstanceSelectorComboBox;
     private javax.swing.JToggleButton attachButton;
     private javax.swing.JToolBar.Separator attachSelectorSeparator;
+    private javax.swing.JLabel cellLabel;
+    private javax.swing.JLabel cellValue;
     private nu.zoom.jme.inspector.heightfield.HeightFieldImageBean heightFieldImageBean;
     private javax.swing.JScrollPane imageComponentScroller;
     private javax.swing.JPanel imageInfoPanel;
@@ -229,6 +256,8 @@ public final class HeightFieldVisualizerTopComponent extends TopComponent implem
     private javax.swing.JLabel maxRangeValue;
     private javax.swing.JLabel minRangeLabel;
     private javax.swing.JLabel minRangeValue;
+    private javax.swing.JLabel nameLabel;
+    private javax.swing.JLabel nameValue;
     private javax.swing.JLabel portLabel;
     private javax.swing.JTextField portTextField;
     private javax.swing.JProgressBar remoteOperationProgressbar;
@@ -270,13 +299,15 @@ public final class HeightFieldVisualizerTopComponent extends TopComponent implem
                 attachButton.setEnabled(!running);
                 remoteOperationProgressbar.setIndeterminate(running);
                 portTextField.setEnabled(!running);
-                if (attached) {
-                    appInstanceSelectorComboBox.setEnabled(!running);
-                }
             }
         });
     }
 
+    /**
+     * Callback methoid for the AppFinder to indicate a connection error.
+     *
+     * @param ex
+     */
     public void indicateConnectionError(Exception ex) {
         final NotifyDescriptor descriptor = new NotifyDescriptor.Message(
                 ex.getMessage() + "\n" + ex.getLocalizedMessage(),
@@ -294,15 +325,21 @@ public final class HeightFieldVisualizerTopComponent extends TopComponent implem
     }
 
     /**
-     * Use this inspector to draw images. Safe to call from any thread.
+     * Use this inspector to draw images. Safe to call from any thread. This is
+     * a callback method for the AppFinder when it has attached to the remote
+     * server and retrieved a reference to a grid inspector. It will also be
+     * called when the app finder detaches (with a null argument).
      *
      * @param terrainGridInspector The new inspector or null.
      */
-    @Messages("CTL_NoTerrainData=Did not recieve and terrain data")
+    @Messages({
+        "CTL_Disconnected=Disconnected",
+        "CTL_Connected=Connected"})
     public void setTerrainGridInspector(
             final JMETerrainGridInspectorMBean terrainGridInspector) {
         this.terrainGridInspectorRef.set(terrainGridInspector);
         if (terrainGridInspector != null) {
+            // Connected
             if (this.refresher != null) {
                 this.refresher.stop();
             }
@@ -311,9 +348,30 @@ public final class HeightFieldVisualizerTopComponent extends TopComponent implem
             this.refresher.addListener(heightFieldImageBean);
             this.refresher.addListener(this);
             this.refresher.start();
-        } else {
+            EventQueue.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    portTextField.setEnabled(false);
+                    attachButton.setSelected(true);
             StatusDisplayer.getDefault().setStatusText(
-                    CTL_NoTerrainData());
+                            CTL_Connected());
+                }
+            });
+
+        } else {
+            // Disconnected
+            if (this.refresher != null) {
+                this.refresher.stop();
+            }
+            EventQueue.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    attachButton.setSelected(false);
+                    StatusDisplayer.getDefault().setStatusText(
+                            CTL_Disconnected());
+                    portTextField.setEnabled(true);
+                }
+            });
         }
     }
 
@@ -335,13 +393,19 @@ public final class HeightFieldVisualizerTopComponent extends TopComponent implem
                 sizeValue.setText("" + terrainQuadInformation.getSize());
                 minRangeValue.setText("" + min);
                 maxRangeValue.setText("" + max);
+                final Vector3f cell = terrainQuadInformation.getCell();
+                cellValue.setText(cell.x + ", " + cell.y + ", " + cell.z);
+                nameValue.setText(terrainQuadInformation.getName());
             }
         });
     }
 
+    /**
+     * Callback from the terrain refresher that it has lost connection to the
+     * remote server.
+     */
     @Override
     public void disconnected() {
-        this.attachButton.setSelected(false);
-        this.attachButton.setEnabled(true);
+        this.appFinder.detach();
     }
 }

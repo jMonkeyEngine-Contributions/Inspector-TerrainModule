@@ -51,9 +51,9 @@ public class HeightFieldImageBean extends JComponent implements Serializable, Te
 
     private final Logger log = Logger.getLogger(getClass().getName());
     public static final String IMAGE_SIZE_PROPERTY = "sampleProperty";
-    private int imageSizeProperty = 256;
+    private int imageSizeProperty = 257;
     private PropertyChangeSupport propertySupport;
-    private final BufferedImage image;
+    private BufferedImage image;
     private final int bkgrndTileSize = 10;
     private float range = 0f;
     public static final String RANGE_PROPERTY = "range";
@@ -62,8 +62,8 @@ public class HeightFieldImageBean extends JComponent implements Serializable, Te
         propertySupport = new PropertyChangeSupport(this);
         this.setMinimumSize(new Dimension(48, 48));
         this.setPreferredSize(new Dimension(imageSizeProperty, imageSizeProperty));
-        this.setMaximumSize(new Dimension(512, 512));
-        this.image = new BufferedImage(imageSizeProperty, imageSizeProperty, BufferedImage.TYPE_INT_ARGB);
+        this.setMaximumSize(new Dimension(513, 513));
+        createImageBuffer();
     }
 
     public int getImageSizeProperty() {
@@ -71,10 +71,14 @@ public class HeightFieldImageBean extends JComponent implements Serializable, Te
     }
 
     public void setImageSizeProperty(int value) {
-        int oldValue = imageSizeProperty;
-        imageSizeProperty = value;
+        if (value != this.imageSizeProperty) {
+            int oldValue = this.imageSizeProperty;
+            this.imageSizeProperty = value;
         this.setPreferredSize(new Dimension(value, value));
+            log.log(Level.FINER, "Setting image size to {0} x {0}", value);
+            createImageBuffer();
         propertySupport.firePropertyChange(IMAGE_SIZE_PROPERTY, oldValue, imageSizeProperty);
+        }
     }
 
     public float getRange() {
