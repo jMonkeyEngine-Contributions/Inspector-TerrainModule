@@ -74,10 +74,10 @@ public class HeightFieldImageBean extends JComponent implements Serializable, Te
         if (value != this.imageSizeProperty) {
             int oldValue = this.imageSizeProperty;
             this.imageSizeProperty = value;
-        this.setPreferredSize(new Dimension(value, value));
+            this.setPreferredSize(new Dimension(value, value));
             log.log(Level.FINER, "Setting image size to {0} x {0}", value);
             createImageBuffer();
-        propertySupport.firePropertyChange(IMAGE_SIZE_PROPERTY, oldValue, imageSizeProperty);
+            propertySupport.firePropertyChange(IMAGE_SIZE_PROPERTY, oldValue, imageSizeProperty);
         }
     }
 
@@ -191,11 +191,14 @@ public class HeightFieldImageBean extends JComponent implements Serializable, Te
     @Override
     public void disconnected() {
         EventQueue.invokeLater(new Runnable() {
-
             @Override
             public void run() {
                 repaint();
             }
         });
+    }
+
+    private void createImageBuffer() {
+        this.image = new BufferedImage(imageSizeProperty, imageSizeProperty, BufferedImage.TYPE_INT_ARGB);
     }
 }
